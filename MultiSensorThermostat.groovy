@@ -1,102 +1,136 @@
 /**
- *  Keep Me Cozy II
- *
- *  Author: SmartThings
+ *  Based on Keep Me Cozy II by SmartThings
  */
+
+definition(
+    name: "Multi-Sensor Thermostat",
+    namespace: "mvgrimes",
+    author: "mgrimes@cpan.org",
+    description: "Use multiple sensors to run thermostat. Use the average, minimum or maximum of multiple sensors.",
+    category: "My Apps",
+    version: "0.2",
+    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo.png",
+    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo@2x.png"
+)
 
 preferences() {
     section("Choose thermostat... ") {
         input "thermostat", "capability.thermostat"
+        input "threshold", "decimal", title: "Theshold (default: 1)", defaultValue: 1
     }
     section("Heat setting..." ) {
         input "heatingSetpoint", "decimal", title: "Degrees"
+        input "heatingFunction", "enum", title: "Combine via (default: min)",
+        required: true, options: [ "ave", "min", "max" ], defaultValue: "min"
     }
     section("Air conditioning setting...") {
         input "coolingSetpoint", "decimal", title: "Degrees"
+        input "coolingFunction", "enum", title: "Combine via (default: max)",
+        required: true, options: [ "ave", "min", "max" ], defaultValue: "max"
     }
-    section("Optionally choose temperature sensor to use instead of the thermostat's... ") {
-        input "sensor", "capability.temperatureMeasurement", title: "Temp Sensors", required: false
+    section("Optionally choose temperature sensors to use instead of the thermostat's... ") {
+        input "sensors", "capability.temperatureMeasurement", title: "Temp Sensors", multiple: true, required: false
     }
 }
 
-def installed()
-{
+def installed() {
     log.debug "enter installed, state: $state"
     subscribeToEvents()
 }
 
-def updated()
-{
+def updated() {
     log.debug "enter updated, state: $state"
     unsubscribe()
     subscribeToEvents()
 }
 
-def subscribeToEvents()
-{
+def subscribeToEvents() {
     subscribe(location, changedLocationMode)
-    if (sensor) {
-        subscribe(sensor, "temperature", temperatureHandler)
-        subscribe(thermostat, "temperature", temperatureHandler)
-        subscribe(thermostat, "thermostatMode", temperatureHandler)
-    }
+    sensors.each{ subscribe(it, "temperature", temperatureHandler) }
+    subscribe(thermostat, "temperature", temperatureHandler)
+    subscribe(thermostat, "thermostatMode", temperatureHandler)
     evaluate()
 }
 
-def changedLocationMode(evt)
-{
+def changedLocationMode(evt) {
     log.debug "changedLocationMode mode: $evt.value, heat: $heat, cool: $cool"
     evaluate()
 }
 
-def temperatureHandler(evt)
-{
+def temperatureHandler(evt) {
     evaluate()
 }
 
-private evaluate()
-{
-    if (sensor) {
-        def threshold = 1.0
-        def tm = thermostat.currentThermostatMode
-        def ct = thermostat.currentTemperature
-        def currentTemp = sensor.currentTemperature
-        log.trace("evaluate:, mode: $tm -- temp: $ct, heat: $thermostat.currentHeatingSetpoint, cool: $thermostat.currentCoolingSetpoint -- "  +
-        "sensor: $currentTemp, heat: $heatingSetpoint, cool: $coolingSetpoint")
-        if (tm in ["cool","auto"]) {
-            // air conditioner
-            if (currentTemp - coolingSetpoint >= threshold) {
-                thermostat.setCoolingSetpoint(ct - 2)
-                log.debug "thermostat.setCoolingSetpoint(${ct - 2}), ON"
-            }
-            else if (coolingSetpoint - currentTemp >= threshold && ct - thermostat.currentCoolingSetpoint >= threshold) {
-                thermostat.setCoolingSetpoint(ct + 2)
-                log.debug "thermostat.setCoolingSetpoint(${ct + 2}), OFF"
-            }
-        }
-        if (tm in ["heat","emergency heat","auto"]) {
-            // heater
-            if (heatingSetpoint - currentTemp >= threshold) {
-                thermostat.setHeatingSetpoint(ct + 2)
-                log.debug "thermostat.setHeatingSetpoint(${ct + 2}), ON"
-            }
-            else if (currentTemp - heatingSetpoint >= threshold && thermostat.currentHeatingSetpoint - ct >= threshold) {
-                thermostat.setHeatingSetpoint(ct - 2)
-                log.debug "thermostat.setHeatingSetpoint(${ct - 2}), OFF"
-            }
-        }
-    }
-    else {
-        thermostat.setHeatingSetpoint(heatingSetpoint)
-        thermostat.setCoolingSetpoint(coolingSetpoint)
+private evaluate() {
+    log.trace("executing evaluate()")
+
+    // If there are no sensors, then just adjust the thermostat's setpoints
+    if(! sensors){
+        log.info( "setPoints( ${coolingSetpoint} - ${heatingSetpoint} ), no sensors" )
+        // thermostat.setHeatingSetpoint(heatingSetpoint)
+        // thermostat.setCoolingSetpoint(coolingSetpoint)
         thermostat.poll()
+        return
+    }
+
+    def tstatMode = thermostat.currentThermostatMode
+    def tstatTemp = thermostat.currentTemperature
+    def temps = [ tstatTemp ] + sensors.collect{ it.currentTemp }
+
+    log.debug("therm[${thermostat}] mode: $tstatMode, temp: $tstatTemp, heat: $thermostat.currentHeatingSetpoint, cool: $thermostat.currentCoolingSetpoint")
+    sensors.each{ log.debug( "sensor[${it}] temp: ${it.currentTemperature}") }
+
+    if (tstatMode in ["cool","auto"]) {                        // air conditioner
+        evaluateCooling( tstatTemp, temps )
+    }
+
+    if (tstatMode in ["heat","emergency heat","auto"]) {       // heater
+        evaluateHeating( tstatTemp, temps )
     }
 }
 
-// for backward compatibility with existing subscriptions
-def coolingSetpointHandler(evt) {
-    log.debug "coolingSetpointHandler()"
+private evaluateCooling( Float tstatTemp, List temps ){
+    def calcTemp
+    if( coolingFunction == "average" ){ calcTemp = temps.sum() / temps.size() }
+    else if( coolingFunction == "max" ){ calcTemp = temps.max() }
+    else if( coolingFunction == "min" ){ calcTemp = temps.min() }
+    else { log.error( "bad coolingingFunction" ) }
+
+    log.debug( "target: ${coolingSetpoint}, current ${coolingFunction} temp: ${calcTemp}" )
+
+    if (calcTemp - coolingSetpoint >= threshold) {
+        // thermostat.setCoolingSetpoint(tstatTemp - 2)
+        log.debug( "thermostat.setCoolingSetpoint(${tstatTemp - 2}), ON" )
+    }
+    else if (coolingSetpoint - calcTemp >= threshold && tstatTemp - thermostat.currentCoolingSetpoint >= threshold) {
+        // thermostat.setCoolingSetpoint(tstatTemp + 2)
+        log.debug( "thermostat.setCoolingSetpoint(${tstatTemp + 2}), OFF" )
+    }
 }
-def heatingSetpointHandler (evt) {
-    log.debug "heatingSetpointHandler ()"
+
+private evaluateHeating( Float tstatTemp, List temps ){
+    def calcTemp
+    if( heatingFunction == "average" ){ calcTemp = temps.sum() / temps.size() }
+    else if( heatingFunction == "max" ){ calcTemp = temps.max() }
+    else if( heatingFunction == "min" ){ calcTemp = temps.min() }
+    else { log.error( "bad heatingFunction" ) }
+
+    log.debug( "target: ${heatingSetpoint}, curent ${heatingFunction} temp: ${calcTemp}" )
+
+    if (heatingSetpoint - calcTemp >= threshold) {
+        // thermostat.setHeatingSetpoint(tstatTemp + 2)
+        log.debug( "thermostat.setHeatingSetpoint(${tstatTemp + 2}), ON" )
+    }
+    else if (calcTemp - heatingSetpoint >= threshold && thermostat.currentHeatingSetpoint - tstatTemp >= threshold) {
+        // thermostat.setHeatingSetpoint(tstatTemp - 2)
+        log.debug( "thermostat.setHeatingSetpoint(${tstatTemp - 2}), OFF" )
+    }
 }
+
+// // for backward compatibility with existing subscriptions
+// def coolingSetpointHandler(evt) {
+//     log.debug "coolingSetpointHandler()"
+// }
+// def heatingSetpointHandler (evt) {
+//     log.debug "heatingSetpointHandler ()"
+// }
