@@ -67,8 +67,8 @@ private evaluate() {
     // If there are no sensors, then just adjust the thermostat's setpoints
     if(! sensors){
         log.info( "setPoints( ${coolingSetpoint} - ${heatingSetpoint} ), no sensors" )
-        // thermostat.setHeatingSetpoint(heatingSetpoint)
-        // thermostat.setCoolingSetpoint(coolingSetpoint)
+        thermostat.setHeatingSetpoint(heatingSetpoint)
+        thermostat.setCoolingSetpoint(coolingSetpoint)
         thermostat.poll()
         return
     }
@@ -80,57 +80,58 @@ private evaluate() {
     log.debug("therm[${thermostat}] mode: $tstatMode, temp: $tstatTemp, heat: $thermostat.currentHeatingSetpoint, cool: $thermostat.currentCoolingSetpoint")
     sensors.each{ log.debug( "sensor[${it}] temp: ${it.currentTemperature}") }
 
-    if (tstatMode in ["cool","auto"]) {                        // air conditioner
+    if (tstatMode in ["cool","auto"]) {     // air conditioner
         evaluateCooling( tstatTemp, temps )
     }
 
-    if (tstatMode in ["heat","emergency heat","auto"]) {       // heater
+    if (tstatMode in ["heat","emergency heat","auto"]) {  // heater
         evaluateHeating( tstatTemp, temps )
     }
 }
 
 private evaluateCooling( Float tstatTemp, List temps ){
-    def calcTemp
-    if( coolingFunction == "average" ){ calcTemp = temps.sum() / temps.size() }
-    else if( coolingFunction == "max" ){ calcTemp = temps.max() }
-    else if( coolingFunction == "min" ){ calcTemp = temps.min() }
-    else { log.error( "bad coolingingFunction" ) }
-
+    def calcTemp = calcTemperature( coolingFunction, temps )
     log.debug( "target: ${coolingSetpoint}, current ${coolingFunction} temp: ${calcTemp}" )
 
     if (calcTemp - coolingSetpoint >= threshold) {
-        // thermostat.setCoolingSetpoint(tstatTemp - 2)
+        thermostat.setCoolingSetpoint(tstatTemp - 2)
         log.debug( "thermostat.setCoolingSetpoint(${tstatTemp - 2}), ON" )
     }
     else if (coolingSetpoint - calcTemp >= threshold && tstatTemp - thermostat.currentCoolingSetpoint >= threshold) {
-        // thermostat.setCoolingSetpoint(tstatTemp + 2)
+        thermostat.setCoolingSetpoint(tstatTemp + 2)
         log.debug( "thermostat.setCoolingSetpoint(${tstatTemp + 2}), OFF" )
     }
 }
 
 private evaluateHeating( Float tstatTemp, List temps ){
-    def calcTemp
-    if( heatingFunction == "average" ){ calcTemp = temps.sum() / temps.size() }
-    else if( heatingFunction == "max" ){ calcTemp = temps.max() }
-    else if( heatingFunction == "min" ){ calcTemp = temps.min() }
-    else { log.error( "bad heatingFunction" ) }
-
+    def calcTemp = calcTemperature( heatingFunction, temps )
     log.debug( "target: ${heatingSetpoint}, curent ${heatingFunction} temp: ${calcTemp}" )
 
     if (heatingSetpoint - calcTemp >= threshold) {
-        // thermostat.setHeatingSetpoint(tstatTemp + 2)
+        thermostat.setHeatingSetpoint(tstatTemp + 2)
         log.debug( "thermostat.setHeatingSetpoint(${tstatTemp + 2}), ON" )
     }
     else if (calcTemp - heatingSetpoint >= threshold && thermostat.currentHeatingSetpoint - tstatTemp >= threshold) {
-        // thermostat.setHeatingSetpoint(tstatTemp - 2)
+        thermostat.setHeatingSetpoint(tstatTemp - 2)
         log.debug( "thermostat.setHeatingSetpoint(${tstatTemp - 2}), OFF" )
     }
 }
 
-// // for backward compatibility with existing subscriptions
-// def coolingSetpointHandler(evt) {
-//     log.debug "coolingSetpointHandler()"
-// }
-// def heatingSetpointHandler (evt) {
-//     log.debug "heatingSetpointHandler ()"
-// }
+private calcTemperature( String func, List temps ){
+    def calcTemp
+    switch( func ){
+        case "average":
+            calcTemp = temps.sum() / temps.size()
+            break
+        case "max":
+            calcTemp = temps.max()
+            break
+        case "min":
+            calcTemp = temps.min()
+            break
+        default:
+            log.error( "bad function: ${func}" )
+    }
+
+    return calcTemp
+}
