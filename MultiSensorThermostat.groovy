@@ -7,7 +7,7 @@ definition(
     namespace: "mvgrimes",
     author: "mgrimes@cpan.org",
     description: "Use multiple sensors to run thermostat. Use the average, minimum or maximum of multiple sensors.",
-    category: "My Apps",
+    category: "Green Living",
     version: "0.2",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo@2x.png"
@@ -75,7 +75,7 @@ private evaluate() {
 
     def tstatMode = thermostat.currentThermostatMode
     def tstatTemp = thermostat.currentTemperature
-    def temps = [ tstatTemp ] + sensors.collect{ it.currentTemp }
+    def temps = [ tstatTemp ] + sensors.collect{ it.currentTemperature }
 
     log.debug("therm[${thermostat}] mode: $tstatMode, temp: $tstatTemp, heat: $thermostat.currentHeatingSetpoint, cool: $thermostat.currentCoolingSetpoint")
     sensors.each{ log.debug( "sensor[${it}] temp: ${it.currentTemperature}") }
