@@ -53,7 +53,7 @@ def subscribeToEvents() {
 }
 
 def changedLocationMode(evt) {
-    log.debug "changedLocationMode mode: $evt.value, heat: $heat, cool: $cool"
+    log.debug "changedLocationMode: mode change to $evt.value"
     evaluate()
 }
 
