@@ -75,7 +75,7 @@ private evaluate() {
 
     def tstatMode = thermostat.currentThermostatMode
     def tstatTemp = thermostat.currentTemperature
-    def temps = [ tstatTemp ] + sensors.collect{ it.currentTemperature }
+    def temps = sensors.collect{ it.currentTemperature }
 
     log.debug("therm[${thermostat}] mode: $tstatMode, temp: $tstatTemp, heat: $thermostat.currentHeatingSetpoint, cool: $thermostat.currentCoolingSetpoint")
     sensors.each{ log.debug( "sensor[${it}] temp: ${it.currentTemperature}") }
