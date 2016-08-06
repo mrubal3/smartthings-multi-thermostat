@@ -17,7 +17,7 @@ metadata {
       name: "Target Temperature Time",
       namespace: "mvgrimes",
       author: "mgrimes@cpan.org",
-      description: "Tile to set the target temperature for use by smartapps like MultiSensorTherm",
+      description: "Tile to set the target temperature for use by SmartApps like MultiSensorTherm",
       category: "Green Living",
       version: "0.1",
       iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo.png",
