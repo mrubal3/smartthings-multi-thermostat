@@ -99,18 +99,30 @@ def parse(String description) {
   // createEvent(name: pair[0].trim(), value: pair[1].trim(), unit:"F")
 }
 
+def setTemperature(value) {
+  log.trace "setTemperature( $value )"
+  sendEvent(name:"temperature", value: value)
+  // evaluate(value, degreesF, device.currentValue("coolingSetpoint"))
+}
+
+def setCombiningFunc(value) {
+  log.trace "setCombiningFunc( $value )"
+  sendEvent(name:"combiningFunction", value: value)
+  // evaluate(value, degreesF, device.currentValue("coolingSetpoint"))
+}
+
 def setHeatingSetpoint(Double degreesF) {
   log.debug "setHeatingSetpoint($degreesF)"
 
   sendEvent(name: "heatingSetpoint", value: degreesF)
-  evaluate(device.currentValue("temperature"), degreesF, device.currentValue("coolingSetpoint"))
+  // evaluate(device.currentValue("temperature"), degreesF, device.currentValue("coolingSetpoint"))
 }
 
 def setCoolingSetpoint(Double degreesF) {
   log.debug "setCoolingSetpoint($degreesF)"
 
   sendEvent(name: "coolingSetpoint", value: degreesF)
-  evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), degreesF)
+  // evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), degreesF)
 }
 
 def evaluate(temp, heatingSetpoint, coolingSetpoint) {

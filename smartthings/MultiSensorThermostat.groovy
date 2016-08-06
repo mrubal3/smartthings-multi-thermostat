@@ -19,6 +19,9 @@ preferences() {
             input "thermostat", "capability.thermostat"
             input "threshold", "decimal", title: "Theshold (default: 1)", defaultValue: 1
         }
+        section("Target Temps..." ) {
+            input "targetControl", "capability.thermostat"
+        }
         section("Heat setting..." ) {
             input "heatingSetpoint", "decimal", title: "Degrees"
             input "heatingFunction", "enum", title: "Combine via (default: min)",
@@ -124,11 +127,15 @@ private evaluate() {
     log.debug(temps);
 
     if (tstatMode in ["cool","auto"]) {     // air conditioner
-        evaluateCooling( tstatTemp, temps )
+        def virtualTemp = evaluateCooling( tstatTemp, temps )
+        targetControl.setTemperature( virtualTemp )
+        targetControl.setCombiningFunc( coolingFunction )
     }
 
     if (tstatMode in ["heat","emergency heat","auto"]) {  // heater
-        evaluateHeating( tstatTemp, temps )
+        def virtualTemp = evaluateHeating( tstatTemp, temps )
+        targetControl.setTemperature( virtualTemp )
+        targetControl.setCombiningFun( heatingFunction )
     }
 }
 
@@ -144,6 +151,8 @@ private evaluateCooling( Float tstatTemp, List temps ){
         thermostat.setCoolingSetpoint(tstatTemp + 2)
         log.debug( "thermostat.setCoolingSetpoint(${tstatTemp + 2}), OFF" )
     }
+
+    return calcTemp
 }
 
 private evaluateHeating( Float tstatTemp, List temps ){
@@ -158,6 +167,8 @@ private evaluateHeating( Float tstatTemp, List temps ){
         thermostat.setHeatingSetpoint(tstatTemp - 2)
         log.debug( "thermostat.setHeatingSetpoint(${tstatTemp - 2}), OFF" )
     }
+
+    return calcTemp
 }
 
 private calcTemperature( String func, List temps ){
