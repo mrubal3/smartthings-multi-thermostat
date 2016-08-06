@@ -8,28 +8,48 @@ definition(
     author: "mgrimes@cpan.org",
     description: "Use multiple sensors to run thermostat. Use the average, minimum or maximum of multiple sensors.",
     category: "Green Living",
-    version: "0.2",
+    version: "0.3",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo@2x.png"
 )
 
 preferences() {
-    section("Choose thermostat... ") {
-        input "thermostat", "capability.thermostat"
-        input "threshold", "decimal", title: "Theshold (default: 1)", defaultValue: 1
+    page(name: "page1", title: "Select thermostat and heat/cool settings", nextPage: "page2", uninstall: true){
+        section("Choose thermostat... ") {
+            input "thermostat", "capability.thermostat"
+            input "threshold", "decimal", title: "Theshold (default: 1)", defaultValue: 1
+        }
+        section("Heat setting..." ) {
+            input "heatingSetpoint", "decimal", title: "Degrees"
+            input "heatingFunction", "enum", title: "Combine via (default: min)",
+            required: true, options: [ "ave", "min", "max" ], defaultValue: "min"
+        }
+        section("Air conditioning setting...") {
+            input "coolingSetpoint", "decimal", title: "Degrees"
+            input "coolingFunction", "enum", title: "Combine via (default: max)",
+            required: true, options: [ "ave", "min", "max" ], defaultValue: "max"
+        }
+        section("Optionally choose temperature sensors to use instead of the thermostat's... ") {
+            input "sensors", "capability.temperatureMeasurement", title: "Temp Sensors", multiple: true, required: false
+        }
     }
-    section("Heat setting..." ) {
-        input "heatingSetpoint", "decimal", title: "Degrees"
-        input "heatingFunction", "enum", title: "Combine via (default: min)",
-        required: true, options: [ "ave", "min", "max" ], defaultValue: "min"
+    page(name: "page2", title: "Presence sensors", nextPage: "page3", install: false, uninstall: false )
+    page(name: "page3", title: "Name app and configure modes", install: true, uninstall: true){
+        section {
+            label title: "Assign a name", required: false
+            input "modes", "mode", title: "Set for specific mode(s)", multiple: true, required: false
+        }
     }
-    section("Air conditioning setting...") {
-        input "coolingSetpoint", "decimal", title: "Degrees"
-        input "coolingFunction", "enum", title: "Combine via (default: max)",
-        required: true, options: [ "ave", "min", "max" ], defaultValue: "max"
-    }
-    section("Optionally choose temperature sensors to use instead of the thermostat's... ") {
-        input "sensors", "capability.temperatureMeasurement", title: "Temp Sensors", multiple: true, required: false
+}
+
+def page2(){
+    dynamicPage(name: "page2", install: false, uninstall: false ){
+        section("Optionally choose presence sensors to toggle temperature sensors...") {
+            sensors.each{
+                input "presenceSensorFor$it", "capability.switch",
+                    title: "Presence Sensor for $it", multiple: false, required: false
+            }
+        }
     }
 }
 
@@ -49,6 +69,12 @@ def subscribeToEvents() {
     sensors.each{ subscribe(it, "temperature", temperatureHandler) }
     subscribe(thermostat, "temperature", temperatureHandler)
     subscribe(thermostat, "thermostatMode", temperatureHandler)
+    sensors.each{
+        if( settings["presenceSensorFor$it"] ){
+            log.debug( "Subscribing to presenceSensorFor${it}" )
+            subscribe(settings["presenceSensorFor$it"], "switch", temperatureHandler)
+        }
+    }
     evaluate()
 }
 
@@ -64,6 +90,11 @@ def temperatureHandler(evt) {
 private evaluate() {
     log.trace("executing evaluate()")
 
+    log.debug("location mode: ${location.mode}");
+    log.debug(settings);
+    // modes.contains( location.mode );
+    if( modes && ! modes.contains(location.mode) ) return;
+
     // If there are no sensors, then just adjust the thermostat's setpoints
     if(! sensors){
         log.info( "setPoints( ${coolingSetpoint} - ${heatingSetpoint} ), no sensors" )
@@ -75,10 +106,22 @@ private evaluate() {
 
     def tstatMode = thermostat.currentThermostatMode
     def tstatTemp = thermostat.currentTemperature
-    def temps = sensors.collect{ it.currentTemperature }
+
+    sensors.each{ log.debug( "sensor[${it}] temp: ${it.currentTemperature}") }
+    sensors.each{
+        log.debug( "presenceSensorFor${it}: ${settings["presenceSensorFor$it"]}")
+        if( settings["presenceSensorFor$it"] ){
+            log.debug( "- is ${settings["presenceSensorFor$it"].currentSwitch}")
+        }
+    }
+
+    def temps = sensors.findResults {
+        def presenceSensor = settings["presenceSensorFor$it"]
+        ( !presenceSensor  || presenceSensor.currentSwitch == "on" ) ? it.currentTemperature : null
+    }
 
     log.debug("therm[${thermostat}] mode: $tstatMode, temp: $tstatTemp, heat: $thermostat.currentHeatingSetpoint, cool: $thermostat.currentCoolingSetpoint")
-    sensors.each{ log.debug( "sensor[${it}] temp: ${it.currentTemperature}") }
+    log.debug(temps);
 
     if (tstatMode in ["cool","auto"]) {     // air conditioner
         evaluateCooling( tstatTemp, temps )
