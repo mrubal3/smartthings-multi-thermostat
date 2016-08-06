@@ -10,6 +10,11 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  Resource from the SmartThings repo:
+ *    - testing/.../simulated-thermostat.groovy
+ *    - testing/.../simulated-temperature-sensor.groovy
+ *    - zwave-thermostat.groovy
+ *    - Create virtual device: https://community.smartthings.com/t/faq-creating-a-virtual-device/11282/2
  */
 
 metadata {
@@ -24,16 +29,14 @@ metadata {
       iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo@2x.png"
     ) {
 
-    capability "Temperature Measurement"   // defines temperature attr
-    capability "Switch Level"              // defines level attr, setLevel(num,num) command
-
+    capability "Thermostat"     // defines a bunch of attr and commands
     command "setTemperature", ["number"]
   }
 
 
   // UI tile definitions
   tiles {
-    valueTile("temperature", "device.temperature", width: 2, height: 2) {
+    valueTile("temperature", "device.temperature", width: 3, height: 2) {
       state("temperature", label:'${currentValue}', unit:"F",
         backgroundColors:[
           [value: 31, color: "#153591"],
@@ -48,13 +51,13 @@ metadata {
     }
 
     controlTile("heatSliderControl", "device.heatingSetpoint", "slider", height: 1, width: 2, inactiveLabel: false) {
-      state "setHeatingSetpoint", action:"quickSetHeat", backgroundColor:"#d04e00"
+      state "setHeatingSetpoint", action:"setHeatingSetpoint", backgroundColor:"#d04e00"
     }
     valueTile("heatingSetpoint", "device.heatingSetpoint", inactiveLabel: false, decoration: "flat") {
       state "heat", label:'${currentValue}° heat', backgroundColor:"#ffffff"
     }
     controlTile("coolSliderControl", "device.coolingSetpoint", "slider", height: 1, width: 2, inactiveLabel: false) {
-      state "setCoolingSetpoint", action:"quickSetCool", backgroundColor: "#1e9cbb"
+      state "setCoolingSetpoint", action:"setCoolingSetpoint", backgroundColor: "#1e9cbb"
     }
     valueTile("coolingSetpoint", "device.coolingSetpoint", inactiveLabel: false, decoration: "flat") {
       state "cool", label:'${currentValue}° cool', backgroundColor:"#ffffff"
@@ -66,28 +69,69 @@ metadata {
   }
 }
 
+def installed() {
+  sendEvent(name: "temperature", value: 72, unit: "F")
+  sendEvent(name: "heatingSetpoint", value: 70, unit: "F")
+  sendEvent(name: "coolingSetpoint", value: 76, unit: "F")
+}
+
 // Parse incoming device messages to generate events
 def parse(String description) {
-  def pair = description.split(":")
-  createEvent(name: pair[0].trim(), value: pair[1].trim(), unit:"F")
+  // def pair = description.split(":")
+  // createEvent(name: pair[0].trim(), value: pair[1].trim(), unit:"F")
 }
 
-def setLevel(value) {
-  sendEvent(name:"temperature", value: value)
+def setHeatingSetpoint(Double degreesF) {
+  log.debug "setHeatingSetpoint($degreesF)"
+
+  sendEvent(name: "heatingSetpoint", value: degreesF)
+  evaluate(device.currentValue("temperature"), degreesF, device.currentValue("coolingSetpoint"))
 }
 
-// def up() {
-//   def ts = device.currentState("temperature")
-//   def value = ts ? ts.integerValue + 1 : 72
-//   sendEvent(name:"temperature", value: value)
-// }
-//
-// def down() {
-//   def ts = device.currentState("temperature")
-//   def value = ts ? ts.integerValue - 1 : 72
-//   sendEvent(name:"temperature", value: value)
-// }
+def setCoolingSetpoint(Double degreesF) {
+  log.debug "setCoolingSetpoint($degreesF)"
 
-def setTemperature(value) {
-  sendEvent(name:"temperature", value: value)
+  sendEvent(name: "coolingSetpoint", value: degreesF)
+  evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), degreesF)
+}
+
+def evaluate(temp, heatingSetpoint, coolingSetpoint) {
+  log.debug "evaluate($temp, $heatingSetpoint, $coolingSetpoint"
+
+  // def threshold = 1.0
+  // def current = device.currentValue("thermostatOperatingState")
+  // def mode = device.currentValue("thermostatMode")
+  //
+  // def heating = false
+  // def cooling = false
+  // def idle = false
+  //
+  // if (mode in ["heat","emergency heat","auto"]) {
+  //   if (heatingSetpoint - temp >= threshold) {
+  //     heating = true
+  //     sendEvent(name: "thermostatOperatingState", value: "heating")
+  //   }
+  //   else if (temp - heatingSetpoint >= threshold) {
+  //     idle = true
+  //   }
+  //   sendEvent(name: "thermostatSetpoint", value: heatingSetpoint)
+  // }
+  //
+  // if (mode in ["cool","auto"]) {
+  //   if (temp - coolingSetpoint >= threshold) {
+  //     cooling = true
+  //     sendEvent(name: "thermostatOperatingState", value: "cooling")
+  //   }
+  //   else if (coolingSetpoint - temp >= threshold && !heating) {
+  //     idle = true
+  //   }
+  //   sendEvent(name: "thermostatSetpoint", value: coolingSetpoint)
+  // }
+  // else {
+  //   sendEvent(name: "thermostatSetpoint", value: heatingSetpoint)
+  // }
+  //
+  // if (idle && !heating && !cooling) {
+  //   sendEvent(name: "thermostatOperatingState", value: "idle")
+  // }
 }
