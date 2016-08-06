@@ -1,5 +1,5 @@
 /**
- *  Copyright 2014 SmartThings
+ *  Copyright 2016 Mark Grimes
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -14,10 +14,10 @@
 
 metadata {
   definition (
-      name: "Target Temperature Time",
+      name: "Target Temperature Tile",
       namespace: "mvgrimes",
       author: "mgrimes@cpan.org",
-      description: "Tile to set the target temperature for use by SmartApps like MultiSensorTherm",
+      description: "Tile to set the target temperature for use by smartapps like MultiSensorTherm",
       category: "Green Living",
       version: "0.1",
       iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo.png",

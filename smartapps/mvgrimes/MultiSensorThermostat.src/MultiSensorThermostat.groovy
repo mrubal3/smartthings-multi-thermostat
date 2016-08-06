@@ -1,1 +1,0 @@
-../../../smartthings/MultiSensorThermostat.groovy
