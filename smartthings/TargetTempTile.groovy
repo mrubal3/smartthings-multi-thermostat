@@ -33,6 +33,7 @@ metadata {
     attribute "combiningFunction", "enum", [ "ave", "min", "max" ]
 
     command "setTemperature", ["number"]
+    command "setCombiningFunc", ["number"]
   }
 
 
