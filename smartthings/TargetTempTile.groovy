@@ -30,13 +30,15 @@ metadata {
     ) {
 
     capability "Thermostat"     // defines a bunch of attr and commands
+    attribute "combiningFunction", "enum", [ "ave", "min", "max" ]
+
     command "setTemperature", ["number"]
   }
 
 
   // UI tile definitions
   tiles {
-    valueTile("temperature", "device.temperature", width: 3, height: 2) {
+    valueTile("temperature", "device.temperature", width: 2, height: 2) {
       state("temperature", label:'${currentValue}', unit:"F",
         backgroundColors:[
           [value: 31, color: "#153591"],
@@ -48,6 +50,17 @@ metadata {
           [value: 96, color: "#bc2323"]
         ]
       )
+    }
+
+    standardTile("mode", "device.thermostatMode", inactiveLabel: false, decoration: "flat") {
+      state "off", label:'${name}', action:"thermostat.heat", backgroundColor:"#ffffff"
+      state "heat", label:'${name}', action:"thermostat.cool", backgroundColor:"#ffa81e"
+      state "cool", label:'${name}', action:"thermostat.auto", backgroundColor:"#269bd2"
+      state "auto", label:'${name}', action:"thermostat.off", backgroundColor:"#79b821"
+    }
+
+    valueTile("combiningFunction", "device.combiningFunction", inactiveLabel: false, decoration: "flat") {
+      state "combining", label:'${currentValue}', backgroundColor:"#ffffff"
     }
 
     controlTile("heatSliderControl", "device.heatingSetpoint", "slider", height: 1, width: 2, inactiveLabel: false) {
@@ -64,19 +77,24 @@ metadata {
     }
 
     main "temperature"
-    details(["temperature", "heatSliderControl", "heatingSetpoint", "coolSliderControl", "coolingSetpoint"])
+    details(["temperature", "mode","combiningFunction", "heatSliderControl",
+      "heatingSetpoint", "coolSliderControl", "coolingSetpoint"])
     // "refresh", "configure"])
   }
 }
 
 def installed() {
   sendEvent(name: "temperature", value: 72, unit: "F")
-  sendEvent(name: "heatingSetpoint", value: 70, unit: "F")
-  sendEvent(name: "coolingSetpoint", value: 76, unit: "F")
+  sendEvent(name: "combiningFunction", value: "max")
+  sendEvent(name: "heatingSetpoint", value: 68, unit: "F")
+  sendEvent(name: "coolingSetpoint", value: 73, unit: "F")
+  sendEvent(name: "thermostatMode", value: "off")
+  sendEvent(name: "thermostatFanMode", value: "fanAuto")
 }
 
 // Parse incoming device messages to generate events
 def parse(String description) {
+  log.debug "parse( $description )"
   // def pair = description.split(":")
   // createEvent(name: pair[0].trim(), value: pair[1].trim(), unit:"F")
 }
