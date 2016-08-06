@@ -78,6 +78,10 @@ def subscribeToEvents() {
             subscribe(settings["presenceSensorFor$it"], "switch", temperatureHandler)
         }
     }
+    if( targetControl ){
+      subscribe( targetControl, "coolingSetpoint", coolingSetpointHandler )
+      subscribe( targetControl, "heatingSetpoint", heatingSetpointHandler )
+    }
     evaluate()
 }
 
@@ -88,6 +92,14 @@ def changedLocationMode(evt) {
 
 def temperatureHandler(evt) {
     evaluate()
+}
+
+def coolingSetpointHandler(evt){
+    log.debug "coolingSetpointHandler: $evt.value"
+}
+
+def heatingSetpointHandler(evt){
+    log.debug "heatingSetpointHandler: $evt.value"
 }
 
 private evaluate() {
