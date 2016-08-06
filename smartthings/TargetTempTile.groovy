@@ -100,13 +100,19 @@ def parse(String description) {
 }
 
 def setTemperature(value) {
-  log.trace "setTemperature( $value )"
+  log.debug "setTemperature( $value )"
   sendEvent(name:"temperature", value: value)
   // evaluate(value, degreesF, device.currentValue("coolingSetpoint"))
 }
 
+def setThermostatMode(String value) {
+  log.debug "setThermostatMode( $value )"
+  sendEvent(name: "thermostatMode", value: value)
+  // evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
+}
+
 def setCombiningFunc(value) {
-  log.trace "setCombiningFunc( $value )"
+  log.debug "setCombiningFunc( $value )"
   sendEvent(name:"combiningFunction", value: value)
   // evaluate(value, degreesF, device.currentValue("coolingSetpoint"))
 }
@@ -126,7 +132,7 @@ def setCoolingSetpoint(Double degreesF) {
 }
 
 def evaluate(temp, heatingSetpoint, coolingSetpoint) {
-  log.debug "evaluate($temp, $heatingSetpoint, $coolingSetpoint"
+  log.debug "evaluate($temp, $heatingSetpoint, $coolingSetpoint)"
 
   // def threshold = 1.0
   // def current = device.currentValue("thermostatOperatingState")

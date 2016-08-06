@@ -128,14 +128,20 @@ private evaluate() {
 
     if (tstatMode in ["cool","auto"]) {     // air conditioner
         def virtualTemp = evaluateCooling( tstatTemp, temps )
-        targetControl.setTemperature( virtualTemp )
-        targetControl.setCombiningFunc( coolingFunction )
+        if( targetControl ){
+          targetControl.setTemperature( virtualTemp )
+          targetControl.setCombiningFunc( coolingFunction )
+          targetControl.setThermostatMode( tstatMode )
+        }
     }
 
     if (tstatMode in ["heat","emergency heat","auto"]) {  // heater
         def virtualTemp = evaluateHeating( tstatTemp, temps )
-        targetControl.setTemperature( virtualTemp )
-        targetControl.setCombiningFun( heatingFunction )
+        if( targetControl ){
+          targetControl.setTemperature( virtualTemp )
+          targetControl.setCombiningFun( heatingFunction )
+          targetControl.setThermostatMode( tstatMode )
+        }
     }
 }
 
@@ -174,7 +180,7 @@ private evaluateHeating( Float tstatTemp, List temps ){
 private calcTemperature( String func, List temps ){
     def calcTemp
     switch( func ){
-        case "average":
+        case "ave":
             calcTemp = temps.sum() / temps.size()
             break
         case "max":
