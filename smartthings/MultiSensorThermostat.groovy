@@ -96,13 +96,15 @@ def temperatureHandler(evt) {
 
 def coolingSetpointHandler(evt){
     log.debug "coolingSetpointHandler: $evt.value"
-    sendEvent(name: "coolingSetpoint", value: evt.value)
+    coolingSetpoint = evt.value
+    sendPush( "Set cooling target to $evt.value" )
     evaluate()
 }
 
 def heatingSetpointHandler(evt){
     log.debug "heatingSetpointHandler: $evt.value"
-    sendEvent(name: "heatingSetpoint", value: evt.value)
+    heatingSetpoint = evt.value
+    sendPush( "Set heat target to $evt.value" )
     evaluate()
 }
 
