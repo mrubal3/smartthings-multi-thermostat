@@ -96,14 +96,14 @@ def temperatureHandler(evt) {
 
 def coolingSetpointHandler(evt){
     log.debug "coolingSetpointHandler: $evt.value"
-    settings.coolingSetpoint = evt.value.toInteger()
+    settings.coolingSetpoint = evt.value.toFloat()
     sendPush( "Set cooling target to $evt.value" )
     evaluate()
 }
 
 def heatingSetpointHandler(evt){
     log.debug "heatingSetpointHandler: $evt.value"
-    settings.heatingSetpoint = evt.value.toInteger()
+    settings.heatingSetpoint = evt.value.toFloat()
     sendPush( "Set heat target to $evt.value" )
     evaluate()
 }
