@@ -8,7 +8,7 @@ definition(
     author: "mgrimes@cpan.org",
     description: "Use multiple sensors to run thermostat. Use the average, minimum or maximum of multiple sensors.",
     category: "Green Living",
-    version: "0.3",
+    version: "2",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo@2x.png"
 )
@@ -58,12 +58,17 @@ def page2(){
 
 def installed() {
     log.debug "enter installed, state: $state"
+    // need to use the state to store these
+    state.heatingSetpoint = settings.heatingSetpoint
+    state.coolingSetpoint = settings.coolingSetpoint
     subscribeToEvents()
 }
 
 def updated() {
     log.debug "enter updated, state: $state"
     unsubscribe()
+    state.heatingSetpoint = settings.heatingSetpoint
+    state.coolingSetpoint = settings.coolingSetpoint
     subscribeToEvents()
 }
 
@@ -96,14 +101,14 @@ def temperatureHandler(evt) {
 
 def coolingSetpointHandler(evt){
     log.debug "coolingSetpointHandler: $evt.value"
-    settings.coolingSetpoint = evt.value.toFloat()
+    state.coolingSetpoint = evt.value.toFloat()
     sendPush( "Set cooling target to $evt.value" )
     evaluate()
 }
 
 def heatingSetpointHandler(evt){
     log.debug "heatingSetpointHandler: $evt.value"
-    settings.heatingSetpoint = evt.value.toFloat()
+    state.heatingSetpoint = evt.value.toFloat()
     sendPush( "Set heat target to $evt.value" )
     evaluate()
 }
@@ -118,9 +123,9 @@ private evaluate() {
 
     // If there are no sensors, then just adjust the thermostat's setpoints
     if(! sensors){
-        log.info( "setPoints( ${coolingSetpoint} - ${heatingSetpoint} ), no sensors" )
-        thermostat.setHeatingSetpoint(heatingSetpoint)
-        thermostat.setCoolingSetpoint(coolingSetpoint)
+        log.info( "setPoints( ${state.coolingSetpoint} - ${state.heatingSetpoint} ), no sensors" )
+        thermostat.setHeatingSetpoint(state.heatingSetpoint)
+        thermostat.setCoolingSetpoint(state.coolingSetpoint)
         thermostat.poll()
         return
     }
@@ -165,13 +170,13 @@ private evaluate() {
 
 private evaluateCooling( Float tstatTemp, List temps ){
     def calcTemp = calcTemperature( coolingFunction, temps )
-    log.debug( "target: ${coolingSetpoint}, current ${coolingFunction} temp: ${calcTemp}" )
+    log.debug( "target: ${state.coolingSetpoint}, current ${coolingFunction} temp: ${calcTemp}" )
 
-    if (calcTemp - coolingSetpoint >= threshold) {
+    if (calcTemp - state.coolingSetpoint >= threshold) {
         thermostat.setCoolingSetpoint(tstatTemp - 2)
         log.debug( "thermostat.setCoolingSetpoint(${tstatTemp - 2}), ON" )
     }
-    else if (coolingSetpoint - calcTemp >= threshold && tstatTemp - thermostat.currentCoolingSetpoint >= threshold) {
+    else if (state.coolingSetpoint - calcTemp >= threshold && tstatTemp - thermostat.currentCoolingSetpoint >= threshold) {
         thermostat.setCoolingSetpoint(tstatTemp + 2)
         log.debug( "thermostat.setCoolingSetpoint(${tstatTemp + 2}), OFF" )
     }
@@ -181,13 +186,13 @@ private evaluateCooling( Float tstatTemp, List temps ){
 
 private evaluateHeating( Float tstatTemp, List temps ){
     def calcTemp = calcTemperature( heatingFunction, temps )
-    log.debug( "target: ${heatingSetpoint}, curent ${heatingFunction} temp: ${calcTemp}" )
+    log.debug( "target: ${state.heatingSetpoint}, curent ${heatingFunction} temp: ${calcTemp}" )
 
-    if (heatingSetpoint - calcTemp >= threshold) {
+    if (state.heatingSetpoint - calcTemp >= threshold) {
         thermostat.setHeatingSetpoint(tstatTemp + 2)
         log.debug( "thermostat.setHeatingSetpoint(${tstatTemp + 2}), ON" )
     }
-    else if (calcTemp - heatingSetpoint >= threshold && thermostat.currentHeatingSetpoint - tstatTemp >= threshold) {
+    else if (calcTemp - state.heatingSetpoint >= threshold && thermostat.currentHeatingSetpoint - tstatTemp >= threshold) {
         thermostat.setHeatingSetpoint(tstatTemp - 2)
         log.debug( "thermostat.setHeatingSetpoint(${tstatTemp - 2}), OFF" )
     }
