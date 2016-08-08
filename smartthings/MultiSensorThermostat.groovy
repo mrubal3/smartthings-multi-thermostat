@@ -118,8 +118,10 @@ private evaluate() {
 
     log.debug("location mode: ${location.mode}");
     log.debug(settings);
-    // modes.contains( location.mode );
     if( modes && ! modes.contains(location.mode) ) return;
+
+    if( state.heatingSetpoint == null ) state.heatingSetpoint = settings.heatingSetpoint
+    if( state.coolingSetpoint == null ) state.coolingSetpoint = settings.coolingSetpoint
 
     // If there are no sensors, then just adjust the thermostat's setpoints
     if(! sensors){
