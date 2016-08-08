@@ -10,7 +10,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
- *  Resource from the SmartThings repo:
+ *  Resources from the SmartThings repo:
  *    - testing/.../simulated-thermostat.groovy
  *    - testing/.../simulated-temperature-sensor.groovy
  *    - zwave-thermostat.groovy
@@ -22,9 +22,9 @@ metadata {
       name: "Target Temperature Tile",
       namespace: "mvgrimes",
       author: "mgrimes@cpan.org",
-      description: "Tile to set the target temperature for use by smartapps like MultiSensorTherm",
+      description: "Tile to set the target temperature for use by SmartApps like MultiSensorTherm",
       category: "Green Living",
-      version: "0.1",
+      version: "2.3",
       iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo.png",
       iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo@2x.png"
     ) {
@@ -96,79 +96,29 @@ def installed() {
 // Parse incoming device messages to generate events
 def parse(String description) {
   log.debug "parse( $description )"
-  // def pair = description.split(":")
-  // createEvent(name: pair[0].trim(), value: pair[1].trim(), unit:"F")
 }
 
 def setTemperature(value) {
   log.debug "setTemperature( $value )"
   sendEvent(name:"temperature", value: value)
-  // evaluate(value, degreesF, device.currentValue("coolingSetpoint"))
 }
 
 def setThermostatMode(String value) {
   log.debug "setThermostatMode( $value )"
   sendEvent(name: "thermostatMode", value: value)
-  // evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), device.currentValue("coolingSetpoint"))
 }
 
 def setCombiningFunc(value) {
   log.debug "setCombiningFunc( $value )"
   sendEvent(name:"combiningFunction", value: value)
-  // evaluate(value, degreesF, device.currentValue("coolingSetpoint"))
 }
 
 def setHeatingSetpoint(Double degreesF) {
   log.debug "setHeatingSetpoint($degreesF)"
-
   sendEvent(name: "heatingSetpoint", value: degreesF)
-  // evaluate(device.currentValue("temperature"), degreesF, device.currentValue("coolingSetpoint"))
 }
 
 def setCoolingSetpoint(Double degreesF) {
   log.debug "setCoolingSetpoint($degreesF)"
-
   sendEvent(name: "coolingSetpoint", value: degreesF)
-  // evaluate(device.currentValue("temperature"), device.currentValue("heatingSetpoint"), degreesF)
-}
-
-def evaluate(temp, heatingSetpoint, coolingSetpoint) {
-  log.debug "evaluate($temp, $heatingSetpoint, $coolingSetpoint)"
-
-  // def threshold = 1.0
-  // def current = device.currentValue("thermostatOperatingState")
-  // def mode = device.currentValue("thermostatMode")
-  //
-  // def heating = false
-  // def cooling = false
-  // def idle = false
-  //
-  // if (mode in ["heat","emergency heat","auto"]) {
-  //   if (heatingSetpoint - temp >= threshold) {
-  //     heating = true
-  //     sendEvent(name: "thermostatOperatingState", value: "heating")
-  //   }
-  //   else if (temp - heatingSetpoint >= threshold) {
-  //     idle = true
-  //   }
-  //   sendEvent(name: "thermostatSetpoint", value: heatingSetpoint)
-  // }
-  //
-  // if (mode in ["cool","auto"]) {
-  //   if (temp - coolingSetpoint >= threshold) {
-  //     cooling = true
-  //     sendEvent(name: "thermostatOperatingState", value: "cooling")
-  //   }
-  //   else if (coolingSetpoint - temp >= threshold && !heating) {
-  //     idle = true
-  //   }
-  //   sendEvent(name: "thermostatSetpoint", value: coolingSetpoint)
-  // }
-  // else {
-  //   sendEvent(name: "thermostatSetpoint", value: heatingSetpoint)
-  // }
-  //
-  // if (idle && !heating && !cooling) {
-  //   sendEvent(name: "thermostatOperatingState", value: "idle")
-  // }
 }
