@@ -176,6 +176,7 @@ private evaluate() {
           targetControl.setTemperature( virtualTemp )
           targetControl.setCombiningFunc( coolingFunction )
           targetControl.setThermostatMode( tstatMode )
+          targetControl.setOperatingState( "cooling" )
         }
     }
 
@@ -185,6 +186,7 @@ private evaluate() {
           targetControl.setTemperature( virtualTemp )
           targetControl.setCombiningFun( heatingFunction )
           targetControl.setThermostatMode( tstatMode )
+          targetControl.setOperatingState( "heating" )
         }
     }
 }
