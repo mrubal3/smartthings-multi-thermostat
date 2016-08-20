@@ -34,6 +34,7 @@ metadata {
 
     command "setTemperature", ["number"]
     command "setCombiningFunc", ["number"]
+    command "setOperatingState", ["string"]
     command "tempUp"
     command "tempDown"
   }
@@ -147,6 +148,11 @@ def setThermostatMode(String value) {
 def setCombiningFunc(value) {
   log.debug "setCombiningFunc( $value )"
   sendEvent(name:"combiningFunction", value: value)
+}
+
+def setOperatingState(value) {
+  log.debug "setOperatingState( $value )"
+  sendEvent(name:"thermostatOperatingState", value: value)
 }
 
 def tempUp(){ tempAdjust(1) }
