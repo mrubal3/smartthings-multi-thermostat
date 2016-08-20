@@ -125,8 +125,8 @@ def heatingSetpointHandler(evt){
 
 private updateSetpoints(){
     if( targetControl ){
-      state.heatingSetpoint = targetControl.currentState("heatingSetpoint")
-      state.coolingSetpoint = targetControl.currentState("coolingSetpoint")
+      state.heatingSetpoint = targetControl.currentValue("heatingSetpoint")
+      state.coolingSetpoint = targetControl.currentValue("coolingSetpoint")
     }
     if( state.heatingSetpoint == null ) state.heatingSetpoint = settings.heatingSetpoint
     if( state.coolingSetpoint == null ) state.coolingSetpoint = settings.coolingSetpoint
