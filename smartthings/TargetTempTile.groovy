@@ -93,8 +93,11 @@ metadata {
       state "auto", label:'${name}', action:"thermostat.off", backgroundColor:"#79b821"
     }
 
-    valueTile("combiningFunction", "device.combiningFunction", inactiveLabel: false, decoration: "flat", width: 4, height: 2) {
+    valueTile("combiningFunction", "device.combiningFunction", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
       state "combining", label:'${currentValue}', backgroundColor:"#ffffff"
+    }
+    valueTile("operatingState", "device.operatingState", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+      state "operating", label:'${currentValue}', backgroundColor:"#ffffff"
     }
 
     controlTile("heatSliderControl", "device.heatingSetpoint", "slider", height: 2, width: 4, inactiveLabel: false) {
@@ -126,13 +129,9 @@ def installed() {
   sendEvent(name: "thermostatFanMode", value: "fanAuto")
 }
 
-def updated(){
-  installed()
-}
-
 // Parse incoming device messages to generate events
 def parse(String description) {
-  log.debug "parse( $description )"
+  log.debug "targetControl: parse( $description )"
 }
 
 def setTemperature(value) {
@@ -155,15 +154,17 @@ def tempDown(){ tempAdjust(-1) }
 
 def tempAdjust(value){
   log.debug( "tempAdjust = ${value}" )
-  log.debug( "thermostatMode = ${device.currentState("thermostatMode")}" )
+  log.debug( "thermostatMode = ${device.currentValue("thermostatMode")}" )
 
-  if( device.currentState("thermostatMode") == "cool" ){
+  if( device.currentValue("thermostatMode") == "cool" ){
     def ts = device.currentState("coolingSetpoint")
     def degreesF = ts ? ts.integerValue + value : 76
+    debug.log( "tempAdjust: sending coolingSetpoint ${degreesF}" )
     sendEvent(name: "coolingSetpoint", value: degreesF)
-  } else if( device.currentState("thermostatMode") == "heat" ){
+  } else if( device.currentValue("thermostatMode") == "heat" ){
     def ts = device.currentState("heatingSetpoint")
     def degreesF = ts ? ts.integerValue + value : 68
+    debug.log( "tempAdjust: sending heatingSetpoint ${degreesF}" )
     sendEvent(name: "heatingSetpoint", value: degreesF)
   }
 }
