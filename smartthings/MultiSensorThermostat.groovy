@@ -20,7 +20,7 @@ definition(
     author: "mgrimes@cpan.org",
     description: "Use multiple sensors to run thermostat. Use the average, minimum or maximum of multiple sensors.",
     category: "Green Living",
-    version: "2.3",
+    version: "2.4",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo@2x.png"
 )
@@ -70,17 +70,14 @@ def page2(){
 
 def installed() {
     log.debug "enter installed, state: $state"
-    // need to use the state to store these
-    state.heatingSetpoint = settings.heatingSetpoint
-    state.coolingSetpoint = settings.coolingSetpoint
+    updateSetpoints()
     subscribeToEvents()
 }
 
 def updated() {
     log.debug "enter updated, state: $state"
     unsubscribe()
-    state.heatingSetpoint = settings.heatingSetpoint
-    state.coolingSetpoint = settings.coolingSetpoint
+    updateSetpoints()
     subscribeToEvents()
 }
 
@@ -95,6 +92,7 @@ def subscribeToEvents() {
             subscribe(settings["presenceSensorFor$it"], "switch", temperatureHandler)
         }
     }
+    // Subscribe to these just so we can re-evaluate
     if( targetControl ){
       subscribe( targetControl, "coolingSetpoint", coolingSetpointHandler )
       subscribe( targetControl, "heatingSetpoint", heatingSetpointHandler )
@@ -112,17 +110,26 @@ def temperatureHandler(evt) {
 }
 
 def coolingSetpointHandler(evt){
-    log.debug "coolingSetpointHandler: $evt.value"
-    state.coolingSetpoint = evt.value.toFloat()
-    sendPush( "Set cooling target to $evt.value" )
+    // log.debug "coolingSetpointHandler: $evt.value"
+    // state.coolingSetpoint = evt.value.toFloat()
+    // sendPush( "Set cooling target to $evt.value" )
     evaluate()
 }
 
 def heatingSetpointHandler(evt){
-    log.debug "heatingSetpointHandler: $evt.value"
-    state.heatingSetpoint = evt.value.toFloat()
-    sendPush( "Set heat target to $evt.value" )
+    // log.debug "heatingSetpointHandler: $evt.value"
+    // state.heatingSetpoint = evt.value.toFloat()
+    // sendPush( "Set heat target to $evt.value" )
     evaluate()
+}
+
+private updateSetpoints(){
+    if( targetControl ){
+      state.heatingSetpoint = targetControl.current("heatingSetpoint")
+      state.coolingSetpoint = targetControl.current("coolingSetpoint")
+    }
+    if( state.heatingSetpoint == null ) state.heatingSetpoint = settings.heatingSetpoint
+    if( state.coolingSetpoint == null ) state.coolingSetpoint = settings.coolingSetpoint
 }
 
 private evaluate() {
@@ -132,8 +139,8 @@ private evaluate() {
     log.debug(settings);
     if( modes && ! modes.contains(location.mode) ) return;
 
-    if( state.heatingSetpoint == null ) state.heatingSetpoint = settings.heatingSetpoint
-    if( state.coolingSetpoint == null ) state.coolingSetpoint = settings.coolingSetpoint
+    // Let's get the target setpoints each time we evaluate
+    updateSetpoints()
 
     // If there are no sensors, then just adjust the thermostat's setpoints
     if(! sensors){
