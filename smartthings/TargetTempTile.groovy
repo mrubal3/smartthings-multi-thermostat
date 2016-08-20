@@ -159,12 +159,12 @@ def tempAdjust(value){
   if( device.currentValue("thermostatMode") == "cool" ){
     def ts = device.currentState("coolingSetpoint")
     def degreesF = ts ? ts.integerValue + value : 76
-    debug.log( "tempAdjust: sending coolingSetpoint ${degreesF}" )
+    log.debug( "tempAdjust: sending coolingSetpoint ${degreesF}" )
     sendEvent(name: "coolingSetpoint", value: degreesF)
   } else if( device.currentValue("thermostatMode") == "heat" ){
     def ts = device.currentState("heatingSetpoint")
     def degreesF = ts ? ts.integerValue + value : 68
-    debug.log( "tempAdjust: sending heatingSetpoint ${degreesF}" )
+    log.debug( "tempAdjust: sending heatingSetpoint ${degreesF}" )
     sendEvent(name: "heatingSetpoint", value: degreesF)
   }
 }
