@@ -77,7 +77,8 @@ metadata {
       state "cool", label:'${currentValue}° cool', backgroundColor:"#ffffff"
     }
 
-    main "temperature"
+    // XXXX: this won't work when we switch to heat!
+    main "coolingSetpoint"
     details(["temperature", "mode","combiningFunction", "heatSliderControl",
       "heatingSetpoint", "coolSliderControl", "coolingSetpoint"])
     // "refresh", "configure"])
