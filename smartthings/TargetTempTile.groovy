@@ -114,7 +114,7 @@ metadata {
     }
 
     main "thermostatFull"
-    details(["thermostatFull", "mode", "combiningFunction",
+    details(["thermostatFull", "mode", "combiningFunction", "operatingState",
       "heatSliderControl", "heatingSetpoint", "coolSliderControl", "coolingSetpoint"])
     // "refresh", "configure"])
   }
@@ -155,6 +155,7 @@ def tempDown(){ tempAdjust(-1) }
 def tempAdjust(value){
   log.debug( "tempAdjust = ${value}" )
   log.debug( "thermostatMode = ${device.currentValue("thermostatMode")}" )
+  log.debug( "thermostatOperatingState = ${device.currentValue("thermostatOperatingState")}" )
 
   if( device.currentValue("thermostatMode") == "cool" ){
     def ts = device.currentState("coolingSetpoint")
