@@ -150,6 +150,8 @@ def setCombiningFunc(value) {
   sendEvent(name:"combiningFunction", value: value)
 }
 
+// We are treating operatingState and mode as equal. We need operatingState 
+// in order to display the detailed 6x tile.
 def setOperatingState(value) {
   log.debug "setOperatingState( $value )"
   sendEvent(name:"thermostatOperatingState", value: value)
