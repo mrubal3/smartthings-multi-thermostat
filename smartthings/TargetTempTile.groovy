@@ -114,10 +114,13 @@ metadata {
       state "cool", label:'${currentValue}° cool', backgroundColor:"#ffffff"
     }
 
-    main "thermostatFull"
-    details(["thermostatFull", "mode", "combiningFunction", "operatingState",
-      "heatSliderControl", "heatingSetpoint", "coolSliderControl", "coolingSetpoint"])
-    // "refresh", "configure"])
+    main "thermostatFull" // ideally this would be target temp, with blue for cooling, etc, not sure that's possible
+    details(["thermostatFull",
+      "heatSliderControl", "heatingSetpoint",
+      "coolSliderControl", "coolingSetpoint",
+      "mode", "combiningFunction", "operatingState",
+      // "refresh", "configure",
+    ])
   }
 }
 
