@@ -72,13 +72,14 @@ def installed() {
     log.debug "enter installed, state: $state"
     updateSetpoints()
     subscribeToEvents()
+    // check on a regular interval (5 minutes), events just don't seem to be consistent enough
+    runEvery5Minutes( evaluate )
 }
 
 def updated() {
     log.debug "enter updated, state: $state"
     unsubscribe()
-    updateSetpoints()
-    subscribeToEvents()
+    installed()
 }
 
 def subscribeToEvents() {
