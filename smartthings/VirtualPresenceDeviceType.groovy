@@ -74,6 +74,6 @@ def off() {
 }
 
 def logState() {
-  log.debug "presence: ${presence}"
-  log.debug "switch: ${switch}"
+  log.debug "presence: ${device.currentValue('presence')}"
+  log.debug "switch: ${device.currentValue('switch')}"
 }
