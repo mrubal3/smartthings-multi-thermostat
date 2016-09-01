@@ -29,16 +29,16 @@ metadata {
   }
 
   tiles {
-    standardTile("presence", "device.presence", width: 2, height: 2, canChangeBackground: true) {
+    standardTile("presence", "device.presence", width: 3, height: 2, canChangeBackground: true) {
       state("not present", label:'not present', icon:"st.presence.tile.not-present", backgroundColor:"#ffffff", action:"on")
       state("present", label:'present', icon:"st.presence.tile.present", backgroundColor:"#53a7c0", action:"off")
     }
-    standardTile("switch", "device.switch", width: 2, height: 2, canChangeIcon: true, canChangeBackground: true) {
+    standardTile("switch", "device.switch", width: 3, height: 2, canChangeIcon: true, canChangeBackground: true) {
       state "on", label: '${name}', action: "switch.off", icon: "st.switches.switch.on", backgroundColor: "#79b821"
       state "off", label: '${name}', action: "switch.on", icon: "st.switches.switch.off", backgroundColor: "#ffffff"
     }
     main "presence"
-    details "presence"
+    details "presence", "switch"
   }
 }
 
