@@ -42,22 +42,6 @@ metadata {
   }
 }
 
-def installed() {
-  log.trace "enter installed"
-  updated()
-}
-
-def updated() {
-  log.trace "enter updated"
-
-  // Ensure we are in a consisent state
-  if( device.currentValue("presence") == "present" ){
-    on()
-  } else {
-    off();
-  }
-}
-
 def parse(String description) {
   def pair = description.split(":")
   createEvent(name: pair[0].trim(), value: pair[1].trim())
@@ -76,7 +60,18 @@ def off() {
   sendEvent(name: "switch", value: "off")
 }
 
+// Ensure we are in a consisent state
+def ensureConsistency() {
+  if( device.currentValue("presence") == "present" ){
+    on()
+  } else {
+    off();
+  }
+}
+
+// Debugging helper
 def logState() {
   log.debug "presence: ${device.currentValue('presence')}"
   log.debug "switch: ${device.currentValue('switch')}"
 }
+
