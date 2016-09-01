@@ -44,33 +44,36 @@ metadata {
 
 def installed() {
   log.trace "enter installed"
-  on()
-  logState()
+  updated()
 }
 
 def updated() {
   log.trace "enter updated"
-  on()
-  logState()
+
+  // Ensure we are in a consisent state
+  if( device.currentValue("presence") == "present" ){
+    on()
+  } else {
+    off();
+  }
 }
 
 def parse(String description) {
   def pair = description.split(":")
   createEvent(name: pair[0].trim(), value: pair[1].trim())
-  logState()
 }
 
 // handle commands
 def on() {
   log.trace "Executing 'on'"
   sendEvent(name: "presence", value: "present")
-  logState()
+  sendEvent(name: "switch", value: "on")
 }
 
 def off() {
   log.trace "Executing 'off'"
   sendEvent(name: "presence", value: "not present")
-  logState()
+  sendEvent(name: "switch", value: "off")
 }
 
 def logState() {
