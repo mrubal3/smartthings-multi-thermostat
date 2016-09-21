@@ -164,7 +164,7 @@ private evaluate() {
     log.debug("therm [${thermostat}]: mode=$tstatMode temp=$tstatTemp heat=$thermostat.currentHeatingSetpoint cool=$thermostat.currentCoolingSetpoint")
     sensors.each{
         if( settings["presenceSensorFor$it"] ){
-          log.debug( "sensor [${it}: temp=${it.currentTemperature} presenceSensor=${settings["presenceSensorFor$it"]} presence=${settings["presenceSensorFor$it"].currentSwitch}")
+          log.debug( "sensor [${it}]: temp=${it.currentTemperature} presenceSensor=${settings["presenceSensorFor$it"]} presence=${settings["presenceSensorFor$it"].currentSwitch}")
         } else {
           log.debug( "sensor [${it}]: temp=${it.currentTemperature} presenceSensor=${settings["presenceSensorFor$it"]}")
         }
