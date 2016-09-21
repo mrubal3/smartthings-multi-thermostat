@@ -141,7 +141,7 @@ private evaluate() {
     log.trace("executing evaluate()")
 
     log.debug("location mode: ${location.mode}");
-    log.debug(settings);
+    log.debug("settings: $settings");
     if( modes && ! modes.contains(location.mode) ) return;
 
     // Let's get the target setpoints each time we evaluate
@@ -159,11 +159,13 @@ private evaluate() {
     def tstatMode = thermostat.currentThermostatMode
     def tstatTemp = thermostat.currentTemperature
 
-    sensors.each{ log.debug( "sensor[${it}] temp: ${it.currentTemperature}") }
+    // Debugging current status
+    log.debug("therm [${thermostat}]: mode=$tstatMode temp=$tstatTemp heat=$thermostat.currentHeatingSetpoint cool=$thermostat.currentCoolingSetpoint")
     sensors.each{
-        log.debug( "presenceSensorFor${it}: ${settings["presenceSensorFor$it"]}")
         if( settings["presenceSensorFor$it"] ){
-            log.debug( "- is ${settings["presenceSensorFor$it"].currentSwitch}")
+          log.debug( "sensor [${it}: temp=${it.currentTemperature} presenceSensor=${settings["presenceSensorFor$it"]} presence=${settings["presenceSensorFor$it"].currentSwitch}")
+        } else {
+          log.debug( "sensor [${it}]: temp=${it.currentTemperature} presenceSensor=${settings["presenceSensorFor$it"]}")
         }
     }
 
@@ -171,9 +173,7 @@ private evaluate() {
         def presenceSensor = settings["presenceSensorFor$it"]
         ( !presenceSensor  || presenceSensor.currentSwitch == "on" ) ? it.currentTemperature : null
     }
-
-    log.debug("therm[${thermostat}] mode: $tstatMode, temp: $tstatTemp, heat: $thermostat.currentHeatingSetpoint, cool: $thermostat.currentCoolingSetpoint")
-    log.debug(temps);
+    log.debug("temps= $temps");
 
     if (tstatMode in ["cool","auto"]) {     // air conditioner
         def virtualTemp = evaluateCooling( tstatTemp, temps )
@@ -197,35 +197,39 @@ private evaluate() {
 }
 
 private evaluateCooling( Float tstatTemp, List temps ){
-    def calcTemp = calcTemperature( coolingFunction, temps )
-    log.debug( "target: ${state.coolingSetpoint}, current ${coolingFunction} temp: ${calcTemp}" )
+    def virtTemp = calcTemperature( coolingFunction, temps )
+    log.debug( "target=${state.coolingSetpoint} combine=${coolingFunction} virtTemp=${virtTemp}" )
 
-    if (calcTemp - state.coolingSetpoint >= threshold) {
+    if (virtTemp - state.coolingSetpoint >= threshold) {        // virtTemp > target
         thermostat.setCoolingSetpoint(tstatTemp - 2)
         log.debug( "thermostat.setCoolingSetpoint(${tstatTemp - 2}), ON" )
     }
-    else if (state.coolingSetpoint - calcTemp >= threshold && tstatTemp - thermostat.currentCoolingSetpoint >= threshold) {
+    else if (state.coolingSetpoint - virtTemp >= threshold      // virtTemp < taget, and
+        && tstatTemp - thermostat.currentCoolingSetpoint >= 0 ) // thermTemp > thermSetPoint (ie, running)
+    {
         thermostat.setCoolingSetpoint(tstatTemp + 2)
         log.debug( "thermostat.setCoolingSetpoint(${tstatTemp + 2}), OFF" )
     }
 
-    return calcTemp
+    return virtTemp
 }
 
 private evaluateHeating( Float tstatTemp, List temps ){
-    def calcTemp = calcTemperature( heatingFunction, temps )
-    log.debug( "target: ${state.heatingSetpoint}, curent ${heatingFunction} temp: ${calcTemp}" )
+    def virtTemp = calcTemperature( heatingFunction, temps )
+    log.debug( "target=${state.heatingSetpoint} combine=${heatingFunction} virtTemp=${virtTemp}" )
 
-    if (state.heatingSetpoint - calcTemp >= threshold) {
+    if (state.heatingSetpoint - virtTemp >= threshold) {        // virtTemp < target
         thermostat.setHeatingSetpoint(tstatTemp + 2)
         log.debug( "thermostat.setHeatingSetpoint(${tstatTemp + 2}), ON" )
     }
-    else if (calcTemp - state.heatingSetpoint >= threshold && thermostat.currentHeatingSetpoint - tstatTemp >= threshold) {
+    else if (virtTemp - state.heatingSetpoint >= threshold      // virtTemp > target, and
+        && thermostat.currentHeatingSetpoint - tstatTemp >= 0)  // termTemp < termSetPoint (ie, running)
+    {
         thermostat.setHeatingSetpoint(tstatTemp - 2)
         log.debug( "thermostat.setHeatingSetpoint(${tstatTemp - 2}), OFF" )
     }
 
-    return calcTemp
+    return virtTemp
 }
 
 private calcTemperature( String func, List temps ){
