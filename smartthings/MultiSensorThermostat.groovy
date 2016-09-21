@@ -73,7 +73,7 @@ def installed() {
     updateSetpoints()
     subscribeToEvents()
     // check on a regular interval (5 minutes), events just don't seem to be consistent enough
-    runEvery5Minutes( evaluate )
+    runEvery5Minutes( publicEvaluate )
 }
 
 def updated() {
@@ -131,6 +131,10 @@ private updateSetpoints(){
     }
     if( state.heatingSetpoint == null ) state.heatingSetpoint = settings.heatingSetpoint
     if( state.coolingSetpoint == null ) state.coolingSetpoint = settings.coolingSetpoint
+}
+
+def publicEvaluate(){
+  evaluate()
 }
 
 private evaluate() {
