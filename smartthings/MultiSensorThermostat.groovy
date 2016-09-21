@@ -79,6 +79,7 @@ def installed() {
 def updated() {
     log.debug "enter updated, state: $state"
     unsubscribe()
+    unschedule()
     installed()
 }
 
