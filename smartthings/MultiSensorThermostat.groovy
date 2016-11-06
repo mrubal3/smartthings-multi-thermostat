@@ -20,7 +20,7 @@ definition(
     author: "mgrimes@cpan.org",
     description: "Use multiple sensors to run thermostat. Use the average, minimum or maximum of multiple sensors.",
     category: "Green Living",
-    version: "2.4",
+    version: "2.5",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo@2x.png"
 )
@@ -190,7 +190,7 @@ private evaluate() {
         def virtualTemp = evaluateHeating( tstatTemp, temps )
         if( targetControl ){
           targetControl.setTemperature( virtualTemp )
-          targetControl.setCombiningFun( heatingFunction )
+          targetControl.setCombiningFunc( heatingFunction )
           targetControl.setThermostatMode( tstatMode )
           targetControl.setOperatingState( "heating" )
         }

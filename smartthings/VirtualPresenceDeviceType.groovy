@@ -43,7 +43,7 @@ metadata {
 }
 
 def parse(String description) {
-  log.debug "parse: $description"
+  log.trace "parse: $description"
   def pair = description.split(":")
   createEvent(name: pair[0].trim(), value: pair[1].trim())
 }
