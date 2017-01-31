@@ -20,7 +20,7 @@ definition(
     author: "mgrimes@cpan.org",
     description: "Use multiple sensors to run thermostat. Use the average, minimum or maximum of multiple sensors.",
     category: "Green Living",
-    version: "2.5",
+    version: "2.6",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Meta/temp_thermo@2x.png"
 )
@@ -136,8 +136,15 @@ private updateSetpoints(){
 }
 
 def publicEvaluate(){
-  log.debug("polling sensors...")
-  sensors.each{ it.poll() }
+  sensors.each{
+    if( it.hasCapability("Poll") ){
+      log.debug("polling ${it}")
+      it.poll()
+    } else if( it.hasCapability("Refresh") ){
+      log.debug("refreshing ${it}")
+      it.refresh()
+    }
+  }
   evaluate()
 }
 
