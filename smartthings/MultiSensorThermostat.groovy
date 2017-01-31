@@ -212,6 +212,9 @@ private evaluateCooling( Float tstatTemp, List temps ){
     log.debug( "target=${state.coolingSetpoint} combine=${coolingFunction} virtTemp=${virtTemp}" )
 
     if (virtTemp - state.coolingSetpoint >= threshold) {        // virtTemp > target
+        // Consider:
+        // Set it at the target, or 2 degrees lower than current, but never less than 5 degrees lower than target
+        // thermostat.setCoolingSetpoint( max( min( state.coolingSetpoint, tstatTemp - 2 ), state.coolingSetpoint - 5 ) )
         thermostat.setCoolingSetpoint(tstatTemp - 2)
         log.debug( "thermostat.setCoolingSetpoint(${tstatTemp - 2}), ON" )
     }
@@ -230,6 +233,9 @@ private evaluateHeating( Float tstatTemp, List temps ){
     log.debug( "target=${state.heatingSetpoint} combine=${heatingFunction} virtTemp=${virtTemp}" )
 
     if (state.heatingSetpoint - virtTemp >= threshold) {        // virtTemp < target
+        // Consider:
+        // Set it at the target, or 2 degrees higher than current, but never more than 5 degrees higher than target
+        // thermostat.setHeatingSetpoint( min( max( state.heatingSetpoint, tstatTemp + 2 ), state.heatingSetpoint + 5 ) )
         thermostat.setHeatingSetpoint(tstatTemp + 2)
         log.debug( "thermostat.setHeatingSetpoint(${tstatTemp + 2}), ON" )
     }
