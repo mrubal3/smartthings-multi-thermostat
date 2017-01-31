@@ -136,7 +136,7 @@ private updateSetpoints(){
 }
 
 def publicEvaluate(){
-  sensors.each{ this.poll() }
+  sensors.each{ it.poll() }
   evaluate()
 }
 
