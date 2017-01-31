@@ -136,6 +136,7 @@ private updateSetpoints(){
 }
 
 def publicEvaluate(){
+  log.debug("polling sensors...")
   sensors.each{ it.poll() }
   evaluate()
 }
