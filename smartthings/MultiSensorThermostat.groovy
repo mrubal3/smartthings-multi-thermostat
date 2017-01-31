@@ -72,6 +72,7 @@ def installed() {
     log.debug "enter installed, state: $state"
     updateSetpoints()
     subscribeToEvents()
+
     // check on a regular interval (5 minutes), events just don't seem to be consistent enough
     runEvery5Minutes( publicEvaluate )
 }
@@ -135,6 +136,7 @@ private updateSetpoints(){
 }
 
 def publicEvaluate(){
+  sensors.each{ this.poll() }
   evaluate()
 }
 
