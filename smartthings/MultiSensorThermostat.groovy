@@ -137,7 +137,7 @@ private updateSetpoints(){
 
 def publicEvaluate(){
   sensors.each{
-    if( it.hasCapability("Poll") ){
+    if( it.hasCapability("Polling") ){
       log.debug("polling ${it}")
       it.poll()
     } else if( it.hasCapability("Refresh") ){
